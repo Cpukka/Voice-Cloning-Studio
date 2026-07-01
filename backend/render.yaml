@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: voice-cloning-api
+    runtime: python
+    repo: https://github.com/Cpukka/Voice-Cloning-Studio
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: voice-cloning-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: USE_S3
+        value: false
+      - key: DEBUG
+        value: false
+      - key: API_VERSION
+        value: v1
+      - key: ALLOWED_ORIGINS
+        value: https://your-vercel-app.vercel.app,https://yourdomain.com
+      - key: VOICE_MODEL_PATH
+        value: ./models/voice_cloning
+      - key: TTS_MODEL_PATH
+        value: ./models/tts
+      - key: MAX_AUDIO_DURATION
+        value: 30
+      - key: SAMPLE_RATE
+        value: 22050
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT

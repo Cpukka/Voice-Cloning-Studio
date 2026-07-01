@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useForm } from 'react-hook-form'
-import { voicesAPI } from '../../lib/api'
+import { voicesAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { Upload, Mic, FileAudio, X, Loader2 } from 'lucide-react'
 
@@ -16,8 +16,7 @@ interface UploadForm {
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<UploadForm>()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<UploadForm>()
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const audioFile = acceptedFiles[0]
@@ -37,7 +36,6 @@ export default function UploadPage() {
       
       setFile(audioFile)
       toast.success(`File "${audioFile.name}" loaded successfully!`)
-      console.log('File loaded:', audioFile.name, audioFile.size, audioFile.type)
     }
   }, [])
 
@@ -53,17 +51,12 @@ export default function UploadPage() {
   })
 
   const onSubmit = async (data: UploadForm) => {
-    console.log('Form submitted!', data)
-    console.log('File:', file)
-    
     if (!file) {
       toast.error('Please select an audio file')
-      console.error('No file selected')
       return
     }
 
     setUploading(true)
-    setUploadProgress(0)
     
     const formData = new FormData()
     formData.append('name', data.name)
@@ -71,37 +64,13 @@ export default function UploadPage() {
     if (data.description) formData.append('description', data.description)
     formData.append('is_public', String(data.isPublic))
 
-    // Log FormData contents
-    console.log('FormData entries:')
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1])
-    }
-
     try {
-      console.log('Sending upload request...')
-      const response = await voicesAPI.upload(formData)
-      console.log('Upload response:', response)
-      
+      await voicesAPI.upload(formData)
       toast.success('Voice uploaded successfully! Processing will take a few minutes.')
       setFile(null)
       reset()
-      
-      // Reset form fields
-      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement
-      if (nameInput) nameInput.value = ''
-      const descInput = document.querySelector('textarea[name="description"]') as HTMLTextAreaElement
-      if (descInput) descInput.value = ''
-      
-      setUploadProgress(100)
-      setTimeout(() => setUploadProgress(0), 3000)
-      
     } catch (error: any) {
-      console.error('Upload error:', error)
-      console.error('Error response:', error.response)
-      console.error('Error data:', error.response?.data)
-      
       toast.error(error.response?.data?.detail || 'Upload failed. Please try again.')
-      setUploadProgress(0)
     } finally {
       setUploading(false)
     }
@@ -109,7 +78,7 @@ export default function UploadPage() {
 
   const removeFile = () => {
     setFile(null)
-    toast.info('File removed')
+    toast.success('File removed') // Changed from toast.info to toast.success
   }
 
   return (
@@ -188,22 +157,6 @@ export default function UploadPage() {
             </div>
           )}
 
-          {/* Upload Progress */}
-          {uploading && (
-            <div className="mt-4">
-              <div className="flex justify-between text-sm text-dark-400 mb-1">
-                <span>Uploading...</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <div className="w-full bg-dark-700 rounded-full h-2 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
           {/* Tips */}
           <div className="mt-6 glass-effect rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
@@ -240,7 +193,8 @@ export default function UploadPage() {
             <input
               {...register('name', { 
                 required: 'Voice name is required',
-                minLength: { value: 2, message: 'Name must be at least 2 characters' }
+                minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                maxLength: { value: 50, message: 'Name must be less than 50 characters' }
               })}
               className="w-full px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white transition-all"
               placeholder="e.g., My Voice"
