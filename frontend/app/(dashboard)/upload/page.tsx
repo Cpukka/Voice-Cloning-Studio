@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useForm } from 'react-hook-form'
-import { voicesAPI } from '@/lib/api'
+import { voicesAPI } from '../../lib/api'
 import toast from 'react-hot-toast'
 import { Upload, Mic, FileAudio, X, Loader2 } from 'lucide-react'
 
