@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: voiceuser
+      POSTGRES_PASSWORD: voicepass123
+      POSTGRES_DB: voice_cloning
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - voice_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voiceuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - voice_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://voiceuser:voicepass123@postgres:5432/voice_cloning
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: your-super-secret-key-change-in-production
+      USE_S3: "false"
+      DEBUG: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/models:/app/models
+      - ./backend/storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - voice_network
+
+  frontend:
+    build: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - voice_network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - voice_network
+
+volumes:
+  postgres_data:
+
+networks:
+  voice_network:
+    driver: bridge
