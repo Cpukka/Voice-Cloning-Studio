@@ -1,0 +1,66 @@
+# Environment files (don't commit these)
+.env
+.env.local
+.env.production
+.env.development
+.env.docker
+.env.test
+*.env
+
+# Only commit example files
+!.env.example
+!.env.local.example
+
+# Node
+node_modules/
+.next/
+out/
+build/
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Storage
+storage/
+uploads/
+*.wav
+*.mp3
+
+# Models
+models/
+*.pth
+*.pt
+*.pkl
+*.h5
+
+# Docker
+*.pid
+
+# Misc
+*.log
+coverage/
+.nyc_output/
+.pytest_cache/
