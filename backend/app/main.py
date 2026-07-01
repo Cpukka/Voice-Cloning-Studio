@@ -140,12 +140,20 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 # ============ FastAPI App ============
 app = FastAPI(title="Voice Cloning Studio API")
 
+# ============ CORS Configuration - FIXED FOR VERCEL ============
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "https://voice-cloning-studio-seven.vercel.app",  # Your Vercel frontend
+        "https://voice-cloning-studio-production.up.railway.app",  # Your Railway backend
+        "http://localhost:3000",  # Local development
+        "http://127.0.0.1:3000",
+        "https://*.vercel.app",  # Allow all Vercel preview deployments
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # ============ AUTH ROUTES ============
